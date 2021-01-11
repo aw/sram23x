@@ -1,9 +1,4 @@
-# Microchip 23x SRAM/NVSRAM embedded-hal SPI driver
-
-[![crates.io](https://img.shields.io/crates/v/sram23x.svg)](https://crates.io/crates/sram23x)
-[![Docs](https://docs.rs/sram23x/badge.svg)](https://docs.rs/sram23x)
-![Maintenance Intention](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
-
+/*!
 This is a platform agnostic Rust driver for the [23x series serial SRAM/NVSRAM SPI memory chips](https://www.microchip.com/en-us/products/memory/serial-sram-and-serial-nvsram),
 based on the [`embedded-hal`](https://github.com/rust-embedded/embedded-hal) traits.
 
@@ -99,18 +94,96 @@ fn main() {
 }
 ```
 
-# Todo
+*/
+#![deny(unsafe_code)]
+#![no_std]
 
-- [ ] Separate I/O into their own private functions
-- [ ] Add tests
-- [ ] Document other missing minor details
+extern crate bit_field;
+extern crate embedded_hal as hal;
 
-# Contributing
+mod sram23x;
 
-If you find any bugs or issues, please [create an issue](https://github.com/aw/sram23x/issues/new).
+/// Microchip SRAM 23x driver
+#[derive(Debug, Default)]
+pub struct Sram23x<SPI, CS, HOLD, DT> {
+    /// The concrete SPI device implementation
+    spi: SPI,
+    /// The SPI chip select pin
+    cs: CS,
+    /// The SPI device hold pin
+    hold: HOLD,
+    /// The SRAM device type
+    dt: DT,
+    /// The operating mode of the device
+    pub mode: u8,
+}
 
-# License
+/// All possible instructions
+#[repr(u8)]
+pub enum Instruction {
+    /// Read data from memory
+    Read = 0x03,
+    /// Write data to memory
+    Write = 0x02,
+    /// Enter Dual I/O access
+    EnterDualIo = 0x3B,
+    /// Enter Quad I/O access
+    EnterQuadIo = 0x38,
+    /// Reset Dual/Quad I/O access
+    ResetIo = 0xFF,
+    /// Read the 8-bit mode/status register
+    ReadMode = 0x05,
+    /// Write the 8-bit mode/status register
+    WriteMode = 0x01,
+}
 
-[MIT License](LICENSE)
+/// Modes of operation
+#[repr(u8)]
+pub enum OperatingMode {
+    /// In this mode, the read/write operations are limited to only one byte
+    Byte = 0b00_000000,
+    /// In this mode, the read and write operations are limited to within the addressed page
+    Page = 0b10_000000,
+    /// In this mode, the entire array can be written to and read from
+    Sequential = 0b01_000000,
+    /// Reserved (do not use this mode)
+    Reserved = 0b11_000000,
+}
 
-Copyright (c) 2021 Alexander Williams, On-Prem <license@on-premises.com>
+/// All possible errors in this crate
+#[derive(Debug)]
+#[repr(u8)]
+pub enum Error<S, P> {
+    /// SPI bus error
+    SpiError(S),
+    /// Pin error
+    PinError(P),
+    /// Too much data received/passed for a read or write
+    TooMuchData,
+    /// Memory address is out of range
+    InvalidAddress,
+    /// Address size is invalid
+    InvalidAddressSize,
+    /// Operating mode is invalid, use `set_mode()` to change it
+    InvalidOperatingMode,
+    /// Operating mode is unknown
+    UnknownOperatingMode,
+}
+
+/// Types of devices supported by this crate
+pub mod device_type {
+    /// Microchip 23A640/23K640, 8KB (64Kbit) SRAM
+    pub struct M23x640;
+    /// Microchip 23A256/23K256, 32KB (256Kbit) SRAM
+    pub struct M23x256;
+    /// Microchip 23A512/23LC512, 64KB (512Kbit) SRAM
+    pub struct M23x512;
+    /// Microchip 23LCV512, 64KB (512Kbit) NVSRAM (VBat)
+    pub struct M23xv512;
+    /// Microchip 23A1024/23LC1024, 128KB (1Mbit) SRAM
+    pub struct M23x1024;
+    /// Microchip 23LCV1024, 128KB (1Mbit) NVSRAM (VBat)
+    pub struct M23xv1024;
+}
+
+type SpiRes<S, P> = Result<(), Error<S, P>>;
