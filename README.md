@@ -44,7 +44,7 @@ Include [library](https://crates.io/crates/sram23x) as a dependency in your Carg
 
 ```toml
 [dependencies]
-sram23x = "0.2.0"
+sram23x = "0.2.1"
 ```
 
 Some example usage:
@@ -69,7 +69,7 @@ fn main() {
 
     // 5. Write 4 bytes of data starting at address 0x00 from a buffer
     let mut data: [u8; 4] = ['t' as u8, 'e' as u8, 's' as u8, 't' as u8];
-    sram.read_sequential(0x00_u32, &mut data).unwrap();
+    sram.write_sequential(0x00_u32, &mut data).unwrap();
 
     // 6. Read 4 bytes of data starting at address 0x00 into a buffer
     sram.read_sequential(0x00_u32, &mut data).unwrap();
