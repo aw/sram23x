@@ -7,6 +7,8 @@
 This is a platform agnostic Rust driver for the [23x series serial SRAM/NVSRAM SPI memory chips](https://www.microchip.com/en-us/products/memory/serial-sram-and-serial-nvsram),
 based on the [`embedded-hal`](https://github.com/rust-embedded/embedded-hal) traits.
 
+See the [Intro post](https://blog.a1w.ca/p/rust-embedded-driver-microchip-23x-sram).
+
 This driver allows you to:
 
 - Read a single byte from a memory address. See: `read_byte()`.
@@ -44,7 +46,7 @@ Include [library](https://crates.io/crates/sram23x) as a dependency in your Carg
 
 ```toml
 [dependencies]
-sram23x = "0.2.1"
+sram23x = "0.2.2"
 ```
 
 Some example usage:
