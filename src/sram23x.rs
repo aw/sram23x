@@ -163,20 +163,22 @@ where
             DT::fill_address(&mut addr, Instruction::Read);
             let data = addr.to_be_bytes();
             let mut buf: [u8; 36] = [0; 36];
-            match DT::ADDRESS_BYTES {
+            let size: usize = DT::ADDRESS_BYTES + 32;
+            let res: [u8; 32] = match DT::ADDRESS_BYTES {
                 3 => {
                     buf[0] = data[0];
                     buf[1] = data[2];
                     buf[2] = data[3];
+                    self.transfer(&mut buf[..size])?;
+                    TryFrom::try_from(&buf[3..35]).unwrap()
                 }
                 4 => {
                     buf[..4].clone_from_slice(&data[..]);
+                    self.transfer(&mut buf[..size])?;
+                    TryFrom::try_from(&buf[4..]).unwrap()
                 }
                 _ => return Err(Error::InvalidAddressSize),
             };
-            let size: usize = DT::ADDRESS_BYTES + 32;
-            self.transfer(&mut buf[..size])?;
-            let res: [u8; 32] = TryFrom::try_from(&buf[DT::ADDRESS_BYTES..]).unwrap();
             Ok(res)
         }
     }

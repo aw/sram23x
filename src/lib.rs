@@ -41,7 +41,7 @@ Include [library](https://crates.io/crates/sram23x) as a dependency in your Carg
 
 ```toml
 [dependencies]
-sram23x = "0.2.2"
+sram23x = "0.3.0"
 ```
 
 Some example usage:
