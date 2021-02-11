@@ -24,7 +24,7 @@ Read the [API Documentation](https://docs.rs/sram23x) for more information.
 |   M23x640 |   8 KB |   64 Kbit | yes |    [23A640/23K640] |
 |   M23x256  |  32 KB | 256 Kbit | yes |    [23A256/23K256] |
 |   M23x512  |  64 KB | 512 Kbit | yes |   [23A512/23LC512] |
-|   M23x512  |  64 KB | 512 Kbit |  no |         [23LCV512] |
+|  M23xv512  |  64 KB | 512 Kbit |  no |         [23LCV512] |
 |  M23x1024  | 128 KB |   1 Mbit | yes | [23A1024/23LC1024] |
 | M23xv1024  | 128 KB |   1 Mbit |  no |        [23LCV1024] |
 
@@ -41,7 +41,7 @@ Include [library](https://crates.io/crates/sram23x) as a dependency in your Carg
 
 ```toml
 [dependencies]
-sram23x = "0.3.0"
+sram23x = "0.3.1"
 ```
 
 Some example usage:
