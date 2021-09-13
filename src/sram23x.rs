@@ -70,12 +70,17 @@ where
     pub fn get_mode(&mut self) -> Result<u8, Error<S, P>> {
         let mut buf: [u8; 2] = [Instruction::ReadMode as u8, 0];
         self.transfer(&mut buf)?;
-        match buf[1].get_bits(6..8) {
-            0b00 | 0b10 | 0b01 | 0b11 => (),
-            _ => return Err(Error::UnknownOperatingMode),
-        };
+        self.get_mode_bits(buf[1])?;
         self.mode = buf[1];
-        Ok(buf[1])
+        Ok(self.mode)
+    }
+
+    /// Return true if the bit pattern for the operating mode is valid
+    fn get_mode_bits(&mut self, bits: u8) -> Result<bool, Error<S, P>> {
+        match bits.get_bits(6..8) {
+            0b00 | 0b10 | 0b01 | 0b11 => return Ok(true),
+            _ => return Err(Error::UnknownOperatingMode),
+        }
     }
 
     /// Sets the operating mode/status of the device
@@ -126,14 +131,19 @@ where
             let mut addr = address;
             DT::fill_address(&mut addr, Instruction::Read);
             let data = addr.to_be_bytes();
-            let mut buf: [u8; 5] = match DT::ADDRESS_BYTES {
-                3 => [data[0], data[2], data[3], 0, 0],
-                4 => [data[0], data[1], data[2], data[3], 0],
-                _ => return Err(Error::InvalidAddressSize),
-            };
+            let mut buf: [u8; 5] = self.get_address_array(data)?;
             self.transfer(&mut buf[..=DT::ADDRESS_BYTES])?;
             Ok(buf[DT::ADDRESS_BYTES])
         }
+    }
+
+    /// Return a 5 element array with the address and empty data byte(s)
+    fn get_address_array(&mut self, data: [u8; 4]) -> Result<[u8; 5], Error<S, P>> {
+        match DT::ADDRESS_BYTES {
+            3 => return Ok([data[0], data[2], data[3], 0, 0]),
+            4 => return Ok([data[0], data[1], data[2], data[3], 0]),
+            _ => return Err(Error::InvalidAddressSize),
+        };
     }
 
     /// Write a single byte to an address
@@ -144,14 +154,19 @@ where
             let mut addr = address;
             DT::fill_address(&mut addr, Instruction::Write);
             let data = addr.to_be_bytes();
-            let mut buf: [u8; 5] = match DT::ADDRESS_BYTES {
-                3 => [data[0], data[2], data[3], byte, 0],
-                4 => [data[0], data[1], data[2], data[3], byte],
-                _ => return Err(Error::InvalidAddressSize),
-            };
+            let mut buf: [u8; 5] = self.set_address_array(data, byte)?;
             self.transfer(&mut buf[..=DT::ADDRESS_BYTES])?;
             Ok(())
         }
+    }
+
+    /// Return a 5 element array with the address and filled data byte(s)
+    fn set_address_array(&mut self, data: [u8; 4], byte: u8) -> Result<[u8; 5], Error<S, P>> {
+        match DT::ADDRESS_BYTES {
+            3 => return Ok([data[0], data[2], data[3], byte, 0]),
+            4 => return Ok([data[0], data[1], data[2], data[3], byte]),
+            _ => return Err(Error::InvalidAddressSize),
+        };
     }
 
     /// Read a 32-byte page starting from an address
@@ -249,4 +264,10 @@ where
             Ok(())
         }
     }
+}
+
+// Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
 }
