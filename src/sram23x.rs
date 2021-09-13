@@ -131,19 +131,10 @@ where
             let mut addr = address;
             DT::fill_address(&mut addr, Instruction::Read);
             let data = addr.to_be_bytes();
-            let mut buf: [u8; 5] = self.get_address_array(data)?;
+            let mut buf: [u8; 5] = self.get_address_array(data, 0)?;
             self.transfer(&mut buf[..=DT::ADDRESS_BYTES])?;
             Ok(buf[DT::ADDRESS_BYTES])
         }
-    }
-
-    /// Return a 5 element array with the address and empty data byte(s)
-    fn get_address_array(&mut self, data: [u8; 4]) -> Result<[u8; 5], Error<S, P>> {
-        match DT::ADDRESS_BYTES {
-            3 => return Ok([data[0], data[2], data[3], 0, 0]),
-            4 => return Ok([data[0], data[1], data[2], data[3], 0]),
-            _ => return Err(Error::InvalidAddressSize),
-        };
     }
 
     /// Write a single byte to an address
@@ -154,14 +145,14 @@ where
             let mut addr = address;
             DT::fill_address(&mut addr, Instruction::Write);
             let data = addr.to_be_bytes();
-            let mut buf: [u8; 5] = self.set_address_array(data, byte)?;
+            let mut buf: [u8; 5] = self.get_address_array(data, byte)?;
             self.transfer(&mut buf[..=DT::ADDRESS_BYTES])?;
             Ok(())
         }
     }
 
     /// Return a 5 element array with the address and filled data byte(s)
-    fn set_address_array(&mut self, data: [u8; 4], byte: u8) -> Result<[u8; 5], Error<S, P>> {
+    fn get_address_array(&mut self, data: [u8; 4], byte: u8) -> Result<[u8; 5], Error<S, P>> {
         match DT::ADDRESS_BYTES {
             3 => return Ok([data[0], data[2], data[3], byte, 0]),
             4 => return Ok([data[0], data[1], data[2], data[3], byte]),
